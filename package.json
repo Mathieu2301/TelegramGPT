@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
+    "mongodb": "^5.4.0",
     "node-telegram-bot-api": "^0.60.0",
     "openai": "^3.2.1"
   }

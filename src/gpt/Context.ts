@@ -24,7 +24,7 @@ interface Config {
   maxHistoryLength?: number;
 }
 
-interface ContextJSON {
+export interface ContextJSON {
   chat: Chat;
   config: Config;
   prompt: string;
@@ -71,7 +71,7 @@ export default class Context {
     }
   }
 
-  private toJSON(): ContextJSON {
+  toJSON(): ContextJSON {
     return {
       chat: this.chat,
       config: this.config,
@@ -79,9 +79,5 @@ export default class Context {
       authors: this.authors,
       messages: this.messages,
     };
-  }
-
-  toString() {
-    return JSON.stringify(this.toJSON(), null, 2);
   }
 }

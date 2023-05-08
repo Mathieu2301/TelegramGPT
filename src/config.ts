@@ -23,4 +23,8 @@ export default {
       defaultMaxLength: Number(process.env.CONTEXT_HISTORY_MAX_LENGTH || 10),
     },
   },
+  mongo: {
+    uri: process.env.MONGO_URI,
+    db: process.env.MONGO_DB,
+  },
 };
