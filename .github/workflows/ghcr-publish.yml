@@ -26,5 +26,5 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: ghcr.io/mathieu2301/telegramgpt:latest
+        tags: ghcr.io/mathieu2301/telegram-gpt:latest
         platforms: linux/amd64,linux/arm64
