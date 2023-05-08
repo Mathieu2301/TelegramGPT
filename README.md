@@ -55,7 +55,7 @@ services:
       # You can use MongoDB as a database, otherwise
       # the contexts will be stored in a folder.
       # Remove this if you don't want to use MongoDB.
-      MONGO_URI: mongodb://mongo:27017
+      MONGO_URI: ${MONGO_URI}
       MONGO_DB: telegram-gpt
 
     # Remove this if you use MongoDB
