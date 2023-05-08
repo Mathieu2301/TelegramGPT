@@ -20,8 +20,13 @@ interface Chat {
   title: string;
 }
 
+interface Config {
+  maxHistoryLength?: number;
+}
+
 interface ContextJSON {
   chat: Chat;
+  config: Config;
   prompt: string;
   authors: { [id: number]: MessageAuthor };
   messages: HistoryQueue;
@@ -29,16 +34,18 @@ interface ContextJSON {
 
 export default class Context {
   readonly chat: Chat;
-  readonly prompt: string = '';
+  readonly config: Config = {};
+  prompt: string = '';
   readonly authors: { [id: number]: MessageAuthor } = {};
   readonly messages: HistoryQueue = [];
 
   constructor(chat: Chat, params?: ContextJSON) {
     this.chat = chat;
     if (!params) return;
-    this.prompt = params.prompt;
-    this.authors = params.authors;
-    this.messages = params.messages;
+    this.config = params.config || {};
+    this.prompt = params.prompt || '';
+    this.authors = params.authors || {};
+    this.messages = params.messages || [];
   }
 
   addMessage(message: Message, author?: MessageAuthor) {
@@ -46,8 +53,13 @@ export default class Context {
     if (author) this.authors[author.id] = author;
   }
 
-  shiftHistory(length: number) {
-    while (this.messages.length > length) this.messages.shift();
+  shiftHistory() {
+    while (this.messages.length >= this.config.maxHistoryLength) this.messages.shift();
+    this.removeOldAuthors();
+  }
+
+  clearHistory() {
+    this.messages.length = 0;
     this.removeOldAuthors();
   }
 
@@ -62,6 +74,7 @@ export default class Context {
   private toJSON(): ContextJSON {
     return {
       chat: this.chat,
+      config: this.config,
       prompt: this.prompt,
       authors: this.authors,
       messages: this.messages,

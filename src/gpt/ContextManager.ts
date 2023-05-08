@@ -15,7 +15,7 @@ export default class GPTContextManager {
   }
 
   public async process(message: TelegramBot.Message): Promise<string> {
-    const context = await GPTContextManager.getContext(message.chat, this.bot);
+    const context = await this.getContext(message.chat);
 
     context.addMessage({
       id: message.message_id,
@@ -30,17 +30,22 @@ export default class GPTContextManager {
     });
 
     // Remove old messages
-    context.shiftHistory(this.config.history.maxLength);
+    context.shiftHistory();
 
-    if (Math.random() < 0.3) {
-      GPTContextManager.saveContext(message.chat, context);
-      return null;
-    }
+    // if (Math.random() < 0.3) {
+    //   this.saveContext(message.chat, context);
+    //   return null;
+    // }
 
     this.bot.sendChatAction(message.chat.id, 'typing');
 
     const prompt = new Prompt(context);
     const answer = await prompt.genCompletion();
+
+    if (!answer) {
+      this.saveContext(message.chat, context);
+      return null;
+    }
 
     context.addMessage({
       id: message.message_id + 1,
@@ -49,18 +54,18 @@ export default class GPTContextManager {
       timestamp: Date.now(),
     });
 
-    GPTContextManager.saveContext(message.chat, context);
+    this.saveContext(message.chat, context);
 
     return answer;
   }
 
   public async clearContextHistory(chat: TelegramBot.Chat) {
-    const context = await GPTContextManager.getContext(chat, this.bot);
-    context.shiftHistory(0);
-    GPTContextManager.saveContext(chat, context);
+    const context = await this.getContext(chat);
+    context.clearHistory();
+    this.saveContext(chat, context);
   }
 
-  static async getContext(chat: TelegramBot.Chat, bot: TelegramBot): Promise<Context> {
+  async getContext(chat: TelegramBot.Chat): Promise<Context> {
     const contextPath = GPTContextManager.getContextPath(chat);
     const chatInfo = {
       id: chat.id,
@@ -70,7 +75,8 @@ export default class GPTContextManager {
 
     if (!fs.existsSync(contextPath)) {
       const newContext = new Context(chatInfo);
-      const me = await bot.getMe();
+      const me = await this.bot.getMe();
+      newContext.config.maxHistoryLength = this.config.history.defaultMaxLength;
       newContext.authors[0] = {
         id: 0,
         isBot: true,
@@ -81,14 +87,30 @@ export default class GPTContextManager {
     }
 
     const contextFile = fs.readFileSync(contextPath, 'utf-8');
-    return new Context(chatInfo, JSON.parse(contextFile));
+    const context = new Context(chatInfo, JSON.parse(contextFile));
+
+    if (!context.authors[0]) {
+      const me = await this.bot.getMe();
+      context.authors[0] = {
+        id: 0,
+        isBot: true,
+        firstName: me.first_name,
+        username: me.username,
+      };
+    }
+
+    if (!context.config || !context.config.maxHistoryLength) {
+      context.config.maxHistoryLength = this.config.history.defaultMaxLength;
+    }
+
+    return context;
   }
 
-  static getContextPath(chat: TelegramBot.Chat) {
+  private static getContextPath(chat: TelegramBot.Chat) {
     return `./contexts/${chat.type}${chat.id}.json`;
   }
 
-  static saveContext(chat: TelegramBot.Chat, context: Context) {
+  saveContext(chat: TelegramBot.Chat, context: Context) {
     const contextPath = GPTContextManager.getContextPath(chat);
     fs.writeFileSync(contextPath, context.toString(), {
       encoding: 'utf-8',

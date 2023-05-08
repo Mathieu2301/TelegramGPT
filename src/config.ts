@@ -20,7 +20,7 @@ export default {
   },
   context: {
     history: {
-      maxLength: Number(process.env.CONTEXT_HISTORY_MAX_LENGTH || 10),
+      defaultMaxLength: Number(process.env.CONTEXT_HISTORY_MAX_LENGTH || 10),
     },
   },
 };

@@ -14,13 +14,14 @@ export default class Prompt {
     const completion = await openai.createCompletion({
       model: 'text-davinci-003',
       prompt: fullPrompt,
-      max_tokens: 400,
+      max_tokens: 100,
       stop: ['\n'],
     });
 
     console.log(
       'PROMPT:', fullPrompt,
       'COMPLETION:', completion.data.choices,
+      'USAGE:', completion.data.usage,
     );
 
     return completion.data.choices[0].text;
